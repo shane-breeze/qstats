@@ -1,34 +1,29 @@
-import subprocess as sp
-import shlex
 import numpy as np
 import pandas as pd
 import xmltodict
+
+from .utils import run_command
 
 __all__ = [
     "pending_jobs",
     "finished_jobs",
     "all_jobs",
+    "queue_status",
 ]
 
 all_columns = [
     "@state", "JB_job_number", "JAT_prio", "JB_name", "JB_owner", "state",
     "JB_submission_time", "JAT_start_time", "JAT_end_time", "cpu_usage",
     "mem_usage", "io_usage", "queue_name", "slots", "tasks", "full_job_name",
-    "exit_status", "failed", "maxvmem",
+    "exit_status", "failed", "maxvmem", "hard_req_queue",
 ]
 
-def run_command(cmd):
-    p = sp.run(
-        shlex.split(cmd),
-        stdout=sp.PIPE, stderr=sp.PIPE,
-        encoding='utf-8',
-    )
-    if len(p.stderr)>0 and p.stderr is not None:
-        print(p.stderr)
-    return p.stdout, p.stderr
+queue_columns = [
+    "name", "used", "available", "total", "unknown", "error",
+]
 
 def pending_jobs(columns=all_columns):
-    out, err = run_command('qstat -xml -ext -r -urg -g d -u "*"')
+    out, err = run_command('qstat -xml -ext -r -urg -g dt -u "*"')
     out_dict = xmltodict.parse(out)
     df_run = pd.DataFrame(out_dict["job_info"]["queue_info"]["job_list"])
     df_pen = pd.DataFrame(out_dict["job_info"]["job_info"]["job_list"])
@@ -136,3 +131,11 @@ def all_jobs(path="/opt/sge/default/common/accounting", columns=all_columns):
     df_pen = pending_jobs(columns=columns)
     df_fin = finished_jobs(path, columns=columns)
     return pd.concat([df_pen, df_fin], axis='index').reset_index(drop=True)
+
+def queue_status(columns=queue_columns):
+    out, err = run_command('qstat -xml -ext -r -urg -g c')
+
+    out_dict = xmltodict.parse(out)
+    queues = out_dict["job_info"]["cluster_queue_summary"]
+
+    return pd.DataFrame(queues).loc[:,columns]
