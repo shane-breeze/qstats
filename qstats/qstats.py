@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 import xmltodict
 
+__all__ = [
+    "pending_jobs",
+    "finished_jobs",
+    "all_jobs",
+]
+
 all_columns = [
     "@state", "JB_job_number", "JAT_prio", "JB_name", "JB_owner", "state",
     "JB_submission_time", "JAT_start_time", "JAT_end_time", "cpu_usage",
@@ -130,7 +136,3 @@ def all_jobs(path="/opt/sge/default/common/accounting", columns=all_columns):
     df_pen = pending_jobs(columns=columns)
     df_fin = finished_jobs(path, columns=columns)
     return pd.concat([df_pen, df_fin], axis='index').reset_index(drop=True)
-
-if __name__ == "__main__":
-    df = all_jobs()
-    print(df)
