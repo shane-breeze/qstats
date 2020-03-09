@@ -8,7 +8,7 @@ with open(path.join(here, "README.md"), 'r') as f:
 
 setup(
     name="qstats",
-    version="0.0.2",
+    version="0.0.3",
     author="Shane Breeze",
     author_email="sdb15@ic.ac.uk",
     description="SGE qstat info",
@@ -16,6 +16,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/shane-breeze/qstats",
     packages=find_packages(),
+    scripts=[
+        "scripts/QSTAT",
+    ],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
