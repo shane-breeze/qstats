@@ -61,9 +61,9 @@ def pending_jobs(columns=all_columns):
         "JB_job_number": "uint64",
         "JAT_prio": "float64",
         "state": "category",
-        "JB_submission_time": "datetime64[ns]",
-        "JAT_start_time": "datetime64[ns]",
-        "JAT_end_time": "datetime64[ns]",
+        "JB_submission_time": "datetime64[s]",
+        "JAT_start_time": "datetime64[s]",
+        "JAT_end_time": "datetime64[s]",
         "cpu_usage": "float64",
         "mem_usage": "float64",
         "io_usage": "float64",
@@ -100,12 +100,10 @@ def finished_jobs(path="/opt/sge/default/common/accounting", columns=all_columns
     df.loc[mask,"state"] = "F" # failed
     df.loc[mask,"@state"] = "failed"
 
+    df["hard_req_queue"] = df["qname"]
     df["queue_name"] = df["qname"]+"@"+df["hostname"]
     df["full_job_name"] = df["JB_name"]
 
-    for c in columns:
-        if c not in df.columns:
-            print(c)
     df = df.loc[:,columns]
 
     df = df.astype({
@@ -113,9 +111,9 @@ def finished_jobs(path="/opt/sge/default/common/accounting", columns=all_columns
         "JB_job_number": "uint64",
         "JAT_prio": "float64",
         "state": "category",
-        "JB_submission_time": "datetime64[ns]",
-        "JAT_start_time": "datetime64[ns]",
-        "JAT_end_time": "datetime64[ns]",
+        "JB_submission_time": "datetime64[s]",
+        "JAT_start_time": "datetime64[s]",
+        "JAT_end_time": "datetime64[s]",
         "cpu_usage": "float64",
         "mem_usage": "float64",
         "io_usage": "float64",

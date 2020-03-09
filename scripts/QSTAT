@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import getpass
 import datetime
@@ -58,36 +59,41 @@ def job_status_frame():
     )
 
     df = pd.DataFrame(
-        df.groupby(["queue", "user", "state"])[["jobs", "duration", "priority"]]
-        .agg(["sum", "min", "mean", "max"])
+        df.groupby(["queue", "user", "state"])[["jobs", "duration", "cpu_usage", "priority"]]
+        .agg(["sum", "min", "median", "mean", "max"])
     )
     df["duration"] = df["duration"].fillna(0.).astype("timedelta64[ns]")
 
     df = df[[
-        ("jobs", "sum"), ("duration", "min"), ("duration", "mean"),
-        ("duration", "max"), #("duration", "sum"),
+        ("jobs", "sum"), ("duration", "min"), ("duration", "median"),
+        ("duration", "mean"), ("duration", "max"), #("duration", "sum"),
+        ("cpu_usage", "mean"),
         ("priority", "max"),
     ]].unstack()
     df.columns.names = ["label", "agg", "state"]
     df.columns = df.columns.reorder_levels(["state", "label", "agg"])
     df = df[[
         ("running", "jobs", "sum"), ("pending", "jobs", "sum"),
-        ("running", "duration", "min"), ("running", "duration", "mean"),
-        ("running", "duration", "max"), #("running", "duration", "sum"),
+        ("running", "duration", "min"), ("running", "duration", "median"),
+        ("running", "duration", "mean"), ("running", "duration", "max"), #("running", "duration", "sum"),
+        ("running", "cpu_usage", "mean"),
         ("pending", "priority", "max"),
     ]]
     df.columns = pd.MultiIndex.from_tuples([
         ("running", "sum"), ("pending", "sum"),
-        ("duration", "min"), ("duration", "mean"), ("duration", "max"),
-        #("duration", "sum"),
+        ("duration", "min"), ("duration", "median"), ("duration", "mean"),
+        ("duration", "max"), #("duration", "sum"),
+        ("cpu_usage", "mean"),
         ("priority", "max"),
     ])
     df[("running", "sum")] = df[("running", "sum")].fillna(0).astype("int64")
     df[("pending", "sum")] = df[("pending", "sum")].fillna(0).astype("int64")
     df[("duration", "min")] = df[("duration", "min")].dt.total_seconds().astype("timedelta64[s]")
+    df[("duration", "median")] = df[("duration", "median")].dt.total_seconds().astype("timedelta64[s]")
     df[("duration", "mean")] = df[("duration", "mean")].dt.total_seconds().astype("timedelta64[s]")
     df[("duration", "max")] = df[("duration", "max")].dt.total_seconds().astype("timedelta64[s]")
     #df[("duration", "sum")] = df[("duration", "sum")].dt.total_seconds().astype("timedelta64[s]")
+    df[("cpu_usage", "mean")] = df[("cpu_usage", "mean")].fillna(0).astype("timedelta64[s]")
     df[("priority", "max")] = df[("priority", "max")]
     df = df.reorder_levels(["user", "queue"]).unstack()
     df.columns.names = ["label", "agg", "queue"]
