@@ -103,7 +103,6 @@ def finished_jobs(path="/opt/sge/default/common/accounting", columns=all_columns
     df["hard_req_queue"] = df["qname"]
     df["queue_name"] = df["qname"]+"@"+df["hostname"]
     df["full_job_name"] = df["JB_name"]
-
     df = df.loc[:,columns]
 
     df = df.astype({
