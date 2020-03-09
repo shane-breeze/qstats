@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import argparse
 import getpass
 import datetime
@@ -7,7 +7,6 @@ import pandas as pd
 import tabulate as tab
 
 from qstats import queue_status, pending_jobs
-from qstats.utils import print_frame
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -59,8 +58,9 @@ def job_status_frame():
     )
 
     df = pd.DataFrame(
-        df.groupby(["queue", "user", "state"])[["jobs", "duration", "cpu_usage", "priority"]]
-        .agg(["sum", "min", "median", "mean", "max"])
+        df.groupby(["queue", "user", "state"])[[
+            "jobs", "duration", "cpu_usage", "priority",
+        ]].agg(["sum", "min", "median", "mean", "max"])
     )
     df["duration"] = df["duration"].fillna(0.).astype("timedelta64[ns]")
 
@@ -75,7 +75,8 @@ def job_status_frame():
     df = df[[
         ("running", "jobs", "sum"), ("pending", "jobs", "sum"),
         ("running", "duration", "min"), ("running", "duration", "median"),
-        ("running", "duration", "mean"), ("running", "duration", "max"), #("running", "duration", "sum"),
+        ("running", "duration", "mean"), ("running", "duration", "max"),
+        #("running", "duration", "sum"),
         ("running", "cpu_usage", "mean"),
         ("pending", "priority", "max"),
     ]]
@@ -88,12 +89,24 @@ def job_status_frame():
     ])
     df[("running", "sum")] = df[("running", "sum")].fillna(0).astype("int64")
     df[("pending", "sum")] = df[("pending", "sum")].fillna(0).astype("int64")
-    df[("duration", "min")] = df[("duration", "min")].dt.total_seconds().astype("timedelta64[s]")
-    df[("duration", "median")] = df[("duration", "median")].dt.total_seconds().astype("timedelta64[s]")
-    df[("duration", "mean")] = df[("duration", "mean")].dt.total_seconds().astype("timedelta64[s]")
-    df[("duration", "max")] = df[("duration", "max")].dt.total_seconds().astype("timedelta64[s]")
-    #df[("duration", "sum")] = df[("duration", "sum")].dt.total_seconds().astype("timedelta64[s]")
-    df[("cpu_usage", "mean")] = df[("cpu_usage", "mean")].fillna(0).astype("timedelta64[s]")
+    df[("duration", "min")] = (
+        df[("duration", "min")].dt.total_seconds().astype("timedelta64[s]")
+    )
+    df[("duration", "median")] = (
+        df[("duration", "median")].dt.total_seconds().astype("timedelta64[s]")
+    )
+    df[("duration", "mean")] = (
+        df[("duration", "mean")].dt.total_seconds().astype("timedelta64[s]")
+    )
+    df[("duration", "max")] = (
+        df[("duration", "max")].dt.total_seconds().astype("timedelta64[s]")
+    )
+    #df[("duration", "sum")] = (
+    #    df[("duration", "sum")].dt.total_seconds().astype("timedelta64[s]")
+    #)
+    df[("cpu_usage", "mean")] = (
+        df[("cpu_usage", "mean")].fillna(0).astype("timedelta64[s]")
+    )
     df[("priority", "max")] = df[("priority", "max")]
     df = df.reorder_levels(["user", "queue"]).unstack()
     df.columns.names = ["label", "agg", "queue"]
@@ -112,13 +125,17 @@ def main(users, queue, format):
     dfj.columns = ["\n".join(c) for c in dfj.columns]
 
     lines = tab.tabulate(dfq, headers='keys', tablefmt=format).splitlines()
-    lines[0] = "|".join(['\033[1m{}\033[0m'.format(c) for c in lines[0].split("|")])
+    lines[0] = "|".join([
+        '\033[1m{}\033[0m'.format(c) for c in lines[0].split("|")
+    ])
     print("")
     print("\n".join(lines))
     print("")
 
     repeats = []
-    lines = tab.tabulate(dfj, headers='keys', tablefmt=format, floatfmt='.3f').splitlines()
+    lines = tab.tabulate(
+        dfj, headers='keys', tablefmt=format, floatfmt='.3f',
+    ).splitlines()
     new_lines = []
     for il, line in enumerate(lines):
         new_line = []
@@ -143,12 +160,6 @@ def main(users, queue, format):
         .replace("0 days 00:00:00", "-"+" "*14)
     )
     print("")
-
-    #print_frame(dfq, users=users, tablefmt=format)
-    #print("")
-    #print_frame(
-    #    dfj, users=users, multiheader=True, tablefmt=format, floatfmt=".4f",
-    #)
 
 if __name__ == "__main__":
     main(**vars(parse_args()))
