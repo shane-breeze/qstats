@@ -8,7 +8,7 @@ with open(path.join(here, "README.md"), 'r') as f:
 
 setup(
     name="qstats",
-    version="0.1.0",
+    version="0.2.0",
     author="Shane Breeze",
     author_email="sdb15@ic.ac.uk",
     description="SGE qstat info",

@@ -5,6 +5,8 @@ import datetime
 import numpy as np
 import pandas as pd
 import tabulate as tab
+import os
+import yaml
 
 from qstats import queue_status, pending_jobs
 
@@ -47,6 +49,7 @@ def queue_status_frame():
 def job_status_frame():
     df = pending_jobs()
     df["queue"] = df["hard_req_queue"]
+    df["queue"] = df["queue"].str.split("@").apply(lambda x: x[0])
     df["user"] = df["JB_owner"]
     df["state"] = df["@state"]
     df["jobs"] = df["slots"]
@@ -114,27 +117,10 @@ def job_status_frame():
     df.columns.names = [None]*3
     return df
 
-def main(users, queue, format):
-    dfq = queue_status_frame()
-    dfj = job_status_frame()
-
-    dfq = dfq.query("queue in @queue").sort_values("used")
-    dfj = dfj[[q for q in queue if q in (c[0] for c in dfj.columns)]]
-    dfj = dfj.sort_values((queue[0], "running", "sum"), ascending=False)
-
-    dfj.columns = ["\n".join(c) for c in dfj.columns]
-
-    lines = tab.tabulate(dfq, headers='keys', tablefmt=format).splitlines()
-    lines[0] = "|".join([
-        '\033[1m{}\033[0m'.format(c) for c in lines[0].split("|")
-    ])
-    print("")
-    print("\n".join(lines))
-    print("")
-
+def print_job_queue(df, users, users_dict, format='presto'):
     repeats = []
     lines = tab.tabulate(
-        dfj, headers='keys', tablefmt=format, floatfmt='.3f',
+        df, headers='keys', tablefmt=format, floatfmt='.3f',
     ).splitlines()
     new_lines = []
     for il, line in enumerate(lines):
@@ -149,17 +135,55 @@ def main(users, queue, format):
         elif il == 2:
             new_line = ['\033[1m{}\033[0m'.format(c) for c in line.split('|')]
         else:
-            if line.split("|")[0].strip() in users:
+            if line.split("|")[0].strip() in [users_dict.get(u, u) for u in users]:
                 new_line = '\033[95m\033[1m{}\033[0m'.format(line).split("|")
             else:
                 new_line = line.split("|")
         new_lines.append("|".join(new_line))
-    print(
+    return (
         "\n".join(new_lines)
         .replace("nan", "  -")
         .replace("0 days 00:00:00", "-"+" "*14)
     )
+
+def main(users, queue, format):
+    dfq = queue_status_frame()
+    dfj = job_status_frame()
+
+    users_dict = {}
+    if os.path.exists(userfile := os.path.expanduser("~/.users.yaml")):
+        with open(userfile, 'r') as f:
+            users_dict = yaml.safe_load(f)
+        dfj = dfj.reset_index()
+        selection = dfj["user"].isin(users_dict.keys())
+        dfj.loc[selection,"user"] = dfj.loc[selection,"user"].map(users_dict).values
+        dfj = dfj.set_index("user")
+
+    dfq = dfq.query("queue in @queue").sort_values("used")
+    dfj = dfj[[q for q in queue if q in (c[0] for c in dfj.columns)]]
+    dfj = dfj.sort_values((queue[0], "running", "sum"), ascending=False)
+    dfj.columns.names = ["queue", "attr", "agg"]
+
+    lines = tab.tabulate(dfq, headers='keys', tablefmt=format).splitlines()
+    lines[0] = "|".join([
+        '\033[1m{}\033[0m'.format(c) for c in lines[0].split("|")
+    ])
     print("")
+    print("\n".join(lines))
+    print("")
+
+    for q in queue:
+        tdfj = dfj.loc[:,dfj.columns.get_level_values("queue")==q]
+        if tdfj.empty:
+            continue
+        selection = (
+            (tdfj.loc[:,(q, "running", "sum")]>0)
+            | (tdfj.loc[:,(q, "pending", "sum")]>0)
+        )
+        tdfj = tdfj.loc[selection,:]
+        tdfj.columns = ["\n".join(c) for c in tdfj.columns]
+        print(print_job_queue(tdfj, users, users_dict))
+        print("")
 
 if __name__ == "__main__":
     main(**vars(parse_args()))
