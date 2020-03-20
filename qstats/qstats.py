@@ -26,7 +26,12 @@ def pending_jobs(columns=all_columns):
     out, err = run_command('qstat -xml -ext -r -urg -g dt -u "*"')
     out_dict = xmltodict.parse(out)
     df_run = pd.DataFrame(out_dict["job_info"]["queue_info"]["job_list"])
-    df_pen = pd.DataFrame(out_dict["job_info"]["job_info"]["job_list"])
+
+    none_pending = out_dict["job_info"]["job_info"] is None
+    if not none_pending:
+        df_pen = pd.DataFrame(out_dict["job_info"]["job_info"]["job_list"])
+    else:
+        df_pen = pd.DataFrame()
 
     # fill missing values
     df_run["JB_submission_time"] = np.nan
@@ -53,8 +58,11 @@ def pending_jobs(columns=all_columns):
 
     # match columns and merge
     df_run = df_run.loc[:, columns]
-    df_pen = df_pen.loc[:, columns]
-    df = pd.concat([df_run, df_pen], axis='index')
+    if not none_pending:
+        df_pen = df_pen.loc[:, columns]
+        df = pd.concat([df_run, df_pen], axis='index')
+    else:
+        df = df_run.copy()
 
     df = df.astype({
         "@state": "category",

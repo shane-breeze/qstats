@@ -75,6 +75,16 @@ def job_status_frame():
     ]].unstack()
     df.columns.names = ["label", "agg", "state"]
     df.columns = df.columns.reorder_levels(["state", "label", "agg"])
+
+    # Deal with no pending jobs
+    if ("pending", "jobs", "sum") not in df.columns:
+        names = df.columns.names
+        df.columns = ["__".join(c) for c in df.columns]
+        df["pending__jobs__sum"] = 0.
+        df["pending__priority__max"] = np.nan
+        df.columns = pd.MultiIndex.from_tuples([c.split("__") for c in df.columns])
+        df.columns.names = names
+
     df = df[[
         ("running", "jobs", "sum"), ("pending", "jobs", "sum"),
         ("running", "duration", "min"), ("running", "duration", "median"),
