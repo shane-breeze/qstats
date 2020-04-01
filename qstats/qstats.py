@@ -29,7 +29,12 @@ def pending_jobs(columns=all_columns):
 
     none_pending = out_dict["job_info"]["job_info"] is None
     if not none_pending:
-        df_pen = pd.DataFrame(out_dict["job_info"]["job_info"]["job_list"])
+        data = out_dict["job_info"]["job_info"]["job_list"]
+        if not isinstance(data, list):
+            data = [data]
+        for d in data:
+            d.pop("hard_request", None)
+        df_pen = pd.DataFrame(data)
     else:
         df_pen = pd.DataFrame()
 
