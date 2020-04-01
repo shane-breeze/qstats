@@ -28,7 +28,8 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         "numpy>=1.18.1",
-        "pandas>=1.0.1",
+        "pandas>=0.25.3",
         "xmltodict>=0.12.0",
+        "tabulate>=0.8.7",
     ],
 )
