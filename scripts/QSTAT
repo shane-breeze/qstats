@@ -161,7 +161,8 @@ def main(users, queue, format):
     dfj = job_status_frame()
 
     users_dict = {}
-    if os.path.exists(userfile := os.path.expanduser("~/.users.yaml")):
+    userfile = os.path.expanduser("~/.users.yaml")
+    if os.path.exists(userfile):
         with open(userfile, 'r') as f:
             users_dict = yaml.safe_load(f)
         dfj = dfj.reset_index()
