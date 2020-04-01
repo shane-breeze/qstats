@@ -16,8 +16,10 @@ def parse_args():
         "-u", "--users", default=getpass.getuser(),
         help="Select user(s), comma-delimited",
     )
-    #parser.add_argument("--usernames", default=False, action="store_true",
-    #                    help="Print usernames instead of names")
+    parser.add_argument(
+        "--usernames", default=False, action="store_true",
+        help="Print usernames instead of names",
+    )
     parser.add_argument(
         "-q", "--queue", default="hep.q,gpu.q,fw.q",
         help="Select queue(s), comma-delimited, e.g. 'hep.q,gpu.q'",
@@ -156,13 +158,13 @@ def print_job_queue(df, users, users_dict, format='presto'):
         .replace("0 days 00:00:00", "-"+" "*14)
     )
 
-def main(users, queue, format):
+def main(users, queue, format, usernames=False):
     dfq = queue_status_frame()
     dfj = job_status_frame()
 
     users_dict = {}
     userfile = os.path.expanduser("~/.users.yaml")
-    if os.path.exists(userfile):
+    if os.path.exists(userfile) and not usernames:
         with open(userfile, 'r') as f:
             users_dict = yaml.safe_load(f)
         dfj = dfj.reset_index()
