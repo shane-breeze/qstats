@@ -31,5 +31,6 @@ setup(
         "pandas>=0.25.3",
         "xmltodict>=0.12.0",
         "tabulate>=0.8.7",
+        "pyyaml>=3.10",
     ],
 )
