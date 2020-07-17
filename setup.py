@@ -18,6 +18,7 @@ setup(
     packages=find_packages(),
     scripts=[
         "scripts/QSTAT",
+        "scripts/qstat_bokeh.py",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
