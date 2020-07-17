@@ -8,7 +8,7 @@ with open(path.join(here, "README.md"), 'r') as f:
 
 setup(
     name="qstats",
-    version="0.3.0",
+    version="0.3.1",
     author="Shane Breeze",
     author_email="sdb15@ic.ac.uk",
     description="SGE qstat info",
@@ -26,12 +26,13 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     install_requires=[
         "numpy>=1.18.1",
         "pandas>=0.25.3",
         "xmltodict>=0.12.0",
         "tabulate>=0.8.7",
         "pyyaml>=3.10",
+        "bokeh>=2.1.1",
     ],
 )
