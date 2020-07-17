@@ -2,12 +2,12 @@
 import os
 import yaml
 import argparse
+from datetime import datetime
 from itertools import cycle
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from qstats import qstats
+import qstats
 
 from bokeh.io import save, output_file
 from bokeh.plotting import figure
@@ -198,7 +198,7 @@ def generate_bokeh_html(running, pending, filename="index.html"):
         l = layout([[
             plot_pie(
                 running.query("queue==@queue and njobs>0"),
-                title="Running",
+                title=f"Running {datetime.now().strftime('%H:%M:%S %d %b, %Y')}",
             ),
             plot_bar(
                 pending.query("queue==@queue and njobs>0"),
