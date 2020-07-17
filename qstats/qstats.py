@@ -69,7 +69,7 @@ def pending_jobs(columns=all_columns):
     else:
         df = df_run.copy()
 
-    df = df.astype({
+    conv_dict = {k: v for k, v in {
         "@state": "category",
         "JB_job_number": "uint64",
         "JAT_prio": "float64",
@@ -85,7 +85,8 @@ def pending_jobs(columns=all_columns):
         "exit_status": "uint64",
         "failed": "uint64",
         "maxvmem": "float64",
-    })
+    }.items() if k in df.columns}
+    df = df.astype(conv_dict)
 
     return (
         df.sort_values(["JB_job_number", "tasks"])
